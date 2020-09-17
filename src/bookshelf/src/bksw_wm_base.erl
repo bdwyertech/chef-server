@@ -54,11 +54,12 @@ malformed_request(Req0, Context) ->
             % https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html
             case bksw_sec:parse_authorization(IncomingAuth) of
                 {ok, [Credential, SignedHeaderKeysString, _]} ->
-                    XAmzDate = wrq:get_req_header("x-amz-date", Req1);
+                    XAmzDate = wrq:get_req_header("x-amz-date", Req1),
+                    XAmzExpiresString = ?MIN5;
                 _ ->
+                    {Credential, XAmzDate, SignedHeaderKeysString, XAmzExpiresString} = {unused, unused, unused, unused},
                     throw({RequestId, Req1, Context})
             end,
-            XAmzExpiresString = ?MIN5
     end,
     try
         case Host = wrq:get_req_header("Host", Req1) of
