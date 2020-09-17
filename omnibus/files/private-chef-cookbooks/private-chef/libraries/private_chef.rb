@@ -39,11 +39,7 @@ module PrivateChef
   chef_backend_members []
 
   addons Mash.new
-  opscode_solr4 Mash.new
-  opscode_solr4['log_rotation'] ||= Mash.new
   elasticsearch Mash.new
-  opscode_expander Mash.new
-  opscode_expander['log_rotation'] ||= Mash.new
   opscode_erchef Mash.new
   opscode_erchef['log_rotation'] ||= Mash.new
   oc_chef_authz Mash.new
@@ -118,6 +114,10 @@ module PrivateChef
   ha Mash.new # For all other HA settings
   drbd Mash.new # For DRBD specific settings
   deprecated_solr_indexing false
+  opscode_expander Mash.new
+  opscode_expander['log_rotation'] ||= Mash.new
+  opscode_solr4 Mash.new
+  opscode_solr4['log_rotation'] ||= Mash.new
   # - end legacy config mashed -
 
   insecure_addon_compat true
@@ -208,7 +208,6 @@ module PrivateChef
         # configuration keys.
         'opscode_solr4',
         'elasticsearch',
-        'opscode_expander',
         'opscode_erchef',
         'oc_chef_authz',
         'folsom_graphite',
@@ -317,7 +316,6 @@ module PrivateChef
       PrivateChef['opscode_solr4']['vip'] ||= PrivateChef['backend_vips']['ipaddress']
       PrivateChef['elasticsearch']['enable'] ||= false
       PrivateChef['elasticsearch']['vip'] ||= PrivateChef['backend_vips']['ipaddress']
-      PrivateChef['opscode_expander']['enable'] ||= false
       PrivateChef['postgresql']['enable'] ||= false
       PrivateChef['postgresql']['vip'] ||= PrivateChef['backend_vips']['ipaddress']
       PrivateChef['lb']['upstream'] ||= Mash.new
