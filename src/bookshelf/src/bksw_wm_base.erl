@@ -53,7 +53,7 @@ malformed_request(Req0, Context) ->
                 {ok, [Credential, SignedHeaderKeysString, IncomingSignature]} ->
                     XAmzDate = wrq:get_req_header("x-amz-date", Req1);
                 _ ->
-                    encode_access_denied_error_response(RequestId, Req1, Context) % <--------
+                    throw({RequestId, Req1, Context})
             end
     end,
     try
