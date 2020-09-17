@@ -30,6 +30,9 @@
 
 -include("internal.hrl").
 
+% 300 seconds i.e. 5 minutes
+-define(MIN5, "300").
+
 %%
 %% Complete webmachine callbacks
 %%
@@ -44,17 +47,18 @@ malformed_request(Req0, Context) ->
         undefined ->
             % presigned url verification
             % https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html
-            [Credential, XAmzDate, SignedHeaderKeysString, IncomingSignature, XAmzExpiresString] =
-                [wrq:get_qs_value(X, "", Req1) || X <- ["X-Amz-Credential", "X-Amz-Date", "X-Amz-SignedHeaders", "X-Amz-Signature", "X-Amz-Expires"]];
+            [Credential, XAmzDate, SignedHeaderKeysString, XAmzExpiresString] =
+                [wrq:get_qs_value(X, "", Req1) || X <- ["X-Amz-Credential", "X-Amz-Date", "X-Amz-SignedHeaders", "X-Amz-Expires"]];
         IncomingAuth ->
             % authorization header verification
             % https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html
             case bksw_sec:parse_authorization(IncomingAuth) of
-                {ok, [Credential, SignedHeaderKeysString, IncomingSignature]} ->
+                {ok, [Credential, SignedHeaderKeysString, _]} ->
                     XAmzDate = wrq:get_req_header("x-amz-date", Req1);
                 _ ->
                     throw({RequestId, Req1, Context})
-            end
+            end,
+            XAmzExpiresString = ?MIN5
     end,
     try
         case Host = wrq:get_req_header("Host", Req1) of
