@@ -59,7 +59,7 @@ malformed_request(Req0, Context) ->
                 _ ->
                     {Credential, XAmzDate, SignedHeaderKeysString, XAmzExpiresString} = {unused, unused, unused, unused},
                     throw({RequestId, Req1, Context})
-            end,
+            end
     end,
     try
         case Host = wrq:get_req_header("Host", Req1) of
@@ -73,7 +73,7 @@ malformed_request(Req0, Context) ->
         case bksw_sec:parse_x_amz_credential(Credential) of
                 {error,      _} -> throw({RequestId, Req1, Context});
                 {ok, ParseCred} -> ParseCred
-            end,
+        end,
 
         % CODE REVIEW: Date is used in both verification types.
 
