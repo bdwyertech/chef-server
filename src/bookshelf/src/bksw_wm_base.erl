@@ -115,7 +115,8 @@ malformed_request(Req0, Context) ->
         case XAmzExpires > 1 andalso XAmzExpires < 604800 of
             true -> ok;
             _    -> throw({RequestId, Req1, Context})
-        end
+        end,
+        {Host, AWSAccessKeyId, Region, Date, SignedHeaders}
     catch
         {RequestId, Req1, Context} -> bksw_sec:encode_access_denied_error_response(RequestId, Req1, Context)
     end.
