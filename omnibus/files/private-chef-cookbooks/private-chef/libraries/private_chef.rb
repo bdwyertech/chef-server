@@ -203,6 +203,9 @@ module PrivateChef
         'opscode_chef',
         'redis_lb',
         'addons',
+        # ospcode_solr4 required to continue to support old-style
+        # external Elasticsearch configuration using the opscode_solr4
+        # configuration keys.
         'opscode_solr4',
         'elasticsearch',
         'opscode_expander',

@@ -96,11 +96,7 @@ class SolrPreflightValidator < PreflightValidator
   end
 
   def external?
-    if cs_solr_attr['external'].nil?
-      node_solr_attr['external']
-    else
-      cs_solr_attr['external']
-    end
+    cs_elasticsearch_attr['external'] || cs_solr_attr['external']
   end
 
   def elasticsearch_enabled?
@@ -127,15 +123,39 @@ class SolrPreflightValidator < PreflightValidator
 
   def warn_unchanged_external_flag
     if OmnibusHelper.has_been_bootstrapped? && backend? && previous_run
-      if cs_solr_attr.key?('external') && (cs_solr_attr['external'] != previous_run['opscode-solr4']['external'])
+      # ES configuration is preferred everywhere so we check that first
+      previous_external_setting = if previous_run['elasticsearch'].key?('external')
+                                    previous_run['elasticsearch']['external']
+                                  elsif previous_run['opscode-solr4'].key?('external')
+                                    previous_run['opscode-solr4']['external']
+                                  else
+                                    # The default external setting has
+                                    # always been a falsy value except
+                                    # for a couple of commits that
+                                    # never went out.
+                                    false
+                                  end
+
+      current_external_setting = if cs_elasticsearch_attr.key?('external')
+                                   cs_elasticsearch_attr['external']
+                                 elsif cs_solr_attr.key?('external')
+                                   cs_solr_attr['external']
+                                 else
+                                   false
+                                 end
+
+      if current_external_setting != previous_external_setting
         ChefServer::Warnings.warn err_SOLR009_warn_validation
       end
     end
   end
 
   def verify_external_url
-    if cs_solr_attr['external'] & !cs_solr_attr['external_url']
-      fail_with err_SOLR010_failed_validation
+    if cs_elasticsearch_attr['external'] && !cs_elasticsearch_attr['external_url']
+      fail_with err_SOLR010_failed_validation(false)
+    end
+    if cs_solr_attr['external'] && !cs_solr_attr['external_url']
+      fail_with err_SOLR010_failed_validation(true)
     end
   end
 
@@ -250,21 +270,41 @@ class SolrPreflightValidator < PreflightValidator
   def err_SOLR009_warn_validation
     <<~EOM
 
-       SOLR009: The value of opscode_solr4['external'] has been changed.  Search
+       SOLR009: The value of opscode_solr4['external'] or elasticsearch['external'] has been changed. Search
                 results against the new external search index may be incorrect. Please
                 run `chef-server-ctl reindex --all` to ensure correct results
 
     EOM
   end
 
-  def err_SOLR010_failed_validation
-    <<~EOM
+  def err_SOLR010_failed_validation(was_solr)
+    if was_solr
+      <<~EOM
 
-      SOLR010: No external url specified for Solr depsite opscode_solr4['external']
-               being set to true. To use an external solr instance, please set
-               opscode_solr4['external_url'] to the external solr endpoint.
+        SOLR010: No external url specified for Elasticsearch depsite opscode_solr4['external']
+                 being set to true.
 
-    EOM
+                To use an external Elasticsearch instance, please set:
+
+                     elasticsearch['external'] = true
+                     elasticsearch['external_url'] = YOUR_ELASTICSEARCH_URL
+
+                in #{CHEF_SERVER_CONFIG_FILE}
+      EOM
+    else
+      <<~EOM
+
+        SOLR010: No external url specified for Elasticsearch depsite elasticsearch['external']
+                 being set to true.
+
+                To use an external Elasticsearch instance, please set:
+
+                     elasticsearch['external'] = true
+                     elasticsearch['external_url'] = YOUR_ELASTICSEARCH_URL
+
+                in #{CHEF_SERVER_CONFIG_FILE}
+      EOM
+    end
   end
 
   def err_SOLR011_failed_validation

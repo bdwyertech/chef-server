@@ -132,10 +132,10 @@ default['private_chef']['haproxy']['etcd_port'] = 2379
 #
 # These options are still accepted in the hopes of expanding
 # compatibility with old configuration files.
-default['private_chef']['opscode-solr4']['external'] = false
+default['private_chef']['opscode-solr4']['external'] = nil
 default['private_chef']['opscode-solr4']['external_url'] = nil
 default['private_chef']['opscode-solr4']['heap_size'] = nil
-default['private_chef']['opscode-solr4']['new_size'] = nil
+# TODO(ssd) 2020-09-17:
 default['private_chef']['opscode-solr4']['elasticsearch_shard_count'] = 5
 default['private_chef']['opscode-solr4']['elasticsearch_replica_count'] = 1
 
@@ -151,6 +151,8 @@ elasticsearch = default['private_chef']['elasticsearch']
 # elasticsearch['tunable_blacklist'] = %w{dir data_dir try_start}
 # elasticsearch['try_start'] = true
 elasticsearch['enable'] = true
+elasticsearch['external'] = nil
+elasticsearch['external_url'] = nil
 elasticsearch['dir'] = "#{var_base}/elasticsearch"
 elasticsearch['data_dir'] = "#{var_base}/elasticsearch/data"
 elasticsearch['plugins_directory'] = "#{var_base}/elasticsearch/plugins"
